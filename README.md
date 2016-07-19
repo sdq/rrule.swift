@@ -1,2 +1,2 @@
 # rrule.swift
-recurrence rules in swift
+recurrence rules in swift (based on SwiftDate)
