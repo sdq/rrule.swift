@@ -2,7 +2,7 @@
 //  RRuleSwift.swift
 //  RecurrenceTest
 //
-//  Created by sdq on 6/29/16.
+//  Created by sdq on 7/18/16.
 //  Copyright © 2016 sdq. All rights reserved.
 //
 
@@ -25,15 +25,15 @@ private struct DateMask {
     var month: Int = 0
     var leapYear: Bool = false
     var nextYearLength: Int = 0
-    var lastdayOfMonth: [Int]?
+    var lastdayOfMonth: [Int] = []
     var weekdayOf1stYearday: Int = 0
-    var yeardayToWeekday: [Int]?
-    var yeardayToMonth: [Int]?
-    var yeardayToMonthday: [Int]?
-    var yeardayToMonthdayNegtive: [Int]?
+    var yeardayToWeekday: [Int] = []
+    var yeardayToMonth: [Int] = []
+    var yeardayToMonthday: [Int] = []
+    var yeardayToMonthdayNegtive: [Int] = []
     var yearLength: Int = 0
-    var yeardayIsNthWeekday: [Int:Bool]?
-    var yeardayIsInWeekno: [Int:Bool]?
+    var yeardayIsNthWeekday: [Int:Bool] = [:]
+    var yeardayIsInWeekno: [Int:Bool] = [:]
 }
 
 class rrule {
@@ -127,6 +127,10 @@ class rrule {
     }
     
     func getOccurrences() -> [NSDate] {
+        return getOccurrencesBetween()
+    }
+    
+    func getOccurrencesBetween(beginDate beginDate: NSDate? = nil, endDate: NSDate? = nil) -> [NSDate] {
 
         year = dtstart.year
         month = dtstart.month
@@ -135,7 +139,9 @@ class rrule {
         minute = dtstart.minute
         second = dtstart.second
         
-        let max = MaxRepeatCycle[frequency]!
+        guard let max = MaxRepeatCycle[frequency] else {
+            return []
+        }
 
         var occurrences = [NSDate]()
         
@@ -179,15 +185,15 @@ class rrule {
                 masks.month = month
             }
 
-            var dayset = getDaySet(year, month: month, day: day, masks: masks)
-            var filterDayset = [Int]()
+            let dayset = getDaySet(year, month: month, day: day, masks: masks)
 
             // 2. filter the dayset by mask
+            var filterDayset = [Int]()
             for yeardayFromZero in dayset {
-                if bymonth.count != 0 && !bymonth.contains(masks.yeardayToMonth![yeardayFromZero]) {
+                if bymonth.count != 0 && !bymonth.contains(masks.yeardayToMonth[yeardayFromZero]) {
                     continue
                 }
-                if byweekno.count != 0 && masks.yeardayIsInWeekno![yeardayFromZero] == nil {
+                if byweekno.count != 0 && masks.yeardayIsInWeekno[yeardayFromZero] == nil {
                     continue
                 }
                 if byyearday.count != 0 {
@@ -201,33 +207,31 @@ class rrule {
                         }
                     }
                 }
-                if (bymonthday.count != 0 || bymonthdayNegative.count != 0) && !bymonthday.contains(masks.yeardayToMonthday![yeardayFromZero]) && !bymonthdayNegative.contains(masks.yeardayToMonthdayNegtive![yeardayFromZero]) {
+                if (bymonthday.count != 0 || bymonthdayNegative.count != 0) && !bymonthday.contains(masks.yeardayToMonthday[yeardayFromZero]) && !bymonthdayNegative.contains(masks.yeardayToMonthdayNegtive[yeardayFromZero]) {
                     continue
                 }
-                if byweekday.count != 0 && !byweekday.contains(masks.yeardayToWeekday![yeardayFromZero]) {
+                if byweekday.count != 0 && !byweekday.contains(masks.yeardayToWeekday[yeardayFromZero]) {
                     continue
                 }
-                if byweekdaynth.count != 0 && masks.yeardayIsNthWeekday![yeardayFromZero] == nil {
+                if byweekdaynth.count != 0 && masks.yeardayIsNthWeekday[yeardayFromZero] == nil {
                     continue
                 }
                 let yearday = yeardayFromZero + 1
                 filterDayset.append(yearday)
             }
 
-            dayset = filterDayset
-
             // setup BYSETPOS
             if bysetpos.count > 0 {
                 for i in 0..<bysetpos.count {
                     if bysetpos[i] < 0 {
-                        bysetpos[i] = dayset.count + 1 + bysetpos[i]
+                        bysetpos[i] = filterDayset.count + 1 + bysetpos[i]
                     }
                 }
             }
 
             // 3. filter the dayset by conditions
 
-            for (index, yearday) in dayset.enumerate() {
+            for (index, yearday) in filterDayset.enumerate() {
                 //yearday to month and day
                 if bysetpos.count > 0 && !bysetpos.contains(index+1) {
                     continue
@@ -239,7 +243,16 @@ class rrule {
                 if occurrences.count >= self.count || (self.until != nil && occurrence > self.until) {
                     break
                 }
-                print("recurrence://\(occurrence + 0.hours)\n")
+                if let beginDate = beginDate {
+                    if beginDate > occurrence {
+                        continue
+                    }
+                }
+                if let endDate = endDate {
+                    if endDate < occurrence {
+                        continue
+                    }
+                }
                 occurrences.append(occurrence)
             }
             if occurrences.count >= self.count {
@@ -263,7 +276,11 @@ class rrule {
                     }
                 }
             case .Weekly:
-                daysIncrement = 7 * interval
+                if dayset.count < 7 {
+                    daysIncrement = 7 * (interval - 1) + dayset.count
+                } else {
+                    daysIncrement = 7 * interval
+                }
             case .Daily:
                 daysIncrement = interval
             default:
@@ -276,7 +293,7 @@ class rrule {
                 day = newDate.day
             }
         }
-        return []
+        return occurrences
     }
     
     private func getDaySet(year: Int, month: Int, day: Int, masks: DateMask) -> [Int] {
@@ -291,8 +308,8 @@ class rrule {
             }
             return returnArray
         case .Monthly:
-            let start = masks.lastdayOfMonth![month - 1]
-            let end = masks.lastdayOfMonth![month]
+            let start = masks.lastdayOfMonth[month - 1]
+            let end = masks.lastdayOfMonth[month]
             var returnArray = [Int]()
             for i in start..<end {
                 returnArray.append(i)
@@ -300,13 +317,13 @@ class rrule {
             return returnArray
         case .Weekly:
             var returnArray = [Int]()
-            var i = NSCalendar.currentCalendar().ordinalityOfUnit(.Day, inUnit: .Year, forDate: date)
+            var i = NSCalendar.currentCalendar().ordinalityOfUnit(.Day, inUnit: .Year, forDate: date) - 1 //from zero
             for _ in 0..<7 {
                 returnArray.append(i)
                 i = i + 1
-//                if ( masks.yeardayToWeekday![i] == wkst ) {
-//                    break
-//                }
+                if ( masks.yeardayToWeekday[i] == wkst ) {
+                    break
+                }
             }
             return returnArray
         case .Daily:
@@ -316,14 +333,9 @@ class rrule {
         case .Minutely:
             fallthrough
         case .Secondly:
-            let i = NSCalendar.currentCalendar().ordinalityOfUnit(.Day, inUnit: .Year, forDate: date)
+            let i = NSCalendar.currentCalendar().ordinalityOfUnit(.Day, inUnit: .Year, forDate: date) - 1
             return [i]
         }
-    }
-    
-    func between(after after: NSDate, before: NSDate, inc:Bool = false) -> [NSDate] {
-
-        return []
     }
     
     private func buildWeeknoMask(year: Int, month: Int, day: Int) {
@@ -360,9 +372,9 @@ class rrule {
             }
 
             for _ in 0..<7 {
-                masks.yeardayIsInWeekno![i] = true
+                masks.yeardayIsInWeekno[i] = true
                 i = i + 1
-                if masks.yeardayToWeekday![i] == wkst {
+                if masks.yeardayToWeekday[i] == wkst {
                     break
                 }
             }
@@ -378,9 +390,9 @@ class rrule {
             }
             if i < masks.yearLength {
                 for _ in 0..<7 {
-                    masks.yeardayIsInWeekno![i] = true
+                    masks.yeardayIsInWeekno[i] = true
                     i = i + 1
-                    if masks.yeardayToWeekday![i] == wkst {
+                    if masks.yeardayToWeekday[i] == wkst {
                         break
                     }
                 }
@@ -401,7 +413,7 @@ class rrule {
         }
         if byweekno.contains(weeksLastYear) {
             for i in 0..<firstWkstOffset {
-                masks.yeardayIsInWeekno![i] = true
+                masks.yeardayIsInWeekno[i] = true
             }
         }
     }

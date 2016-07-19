@@ -11,7 +11,7 @@
 		32208D3E1D13A35900651030 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 32208D3D1D13A35900651030 /* Assets.xcassets */; };
 		32208D571D13A38D00651030 /* EventKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32208D561D13A38D00651030 /* EventKit.framework */; };
 		327DD4621D376363008ED6FF /* SwiftDate.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 32EB4DC61D2622ED0046EC43 /* SwiftDate.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		32C894D91D3DF4D600453023 /* rrule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32C894D81D3DF4D600453023 /* rrule.swift */; };
+		32BE37961D3E22E20012F291 /* rrule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32BE37951D3E22E20012F291 /* rrule.swift */; };
 		32EB4DC71D2622ED0046EC43 /* SwiftDate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32EB4DC61D2622ED0046EC43 /* SwiftDate.framework */; };
 /* End PBXBuildFile section */
 
@@ -35,7 +35,7 @@
 		32208D3D1D13A35900651030 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		32208D421D13A35900651030 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		32208D561D13A38D00651030 /* EventKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = EventKit.framework; path = System/Library/Frameworks/EventKit.framework; sourceTree = SDKROOT; };
-		32C894D81D3DF4D600453023 /* rrule.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = rrule.swift; sourceTree = "<group>"; };
+		32BE37951D3E22E20012F291 /* rrule.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = rrule.swift; path = ../../rrule.swift; sourceTree = "<group>"; };
 		32EB4DC61D2622ED0046EC43 /* SwiftDate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftDate.framework; path = Carthage/Build/iOS/SwiftDate.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -73,7 +73,7 @@
 		32208D351D13A35900651030 /* rruledemo */ = {
 			isa = PBXGroup;
 			children = (
-				32C894D81D3DF4D600453023 /* rrule.swift */,
+				32BE37951D3E22E20012F291 /* rrule.swift */,
 				32208D361D13A35900651030 /* AppDelegate.swift */,
 				32208D3D1D13A35900651030 /* Assets.xcassets */,
 				32208D421D13A35900651030 /* Info.plist */,
@@ -152,7 +152,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				32C894D91D3DF4D600453023 /* rrule.swift in Sources */,
+				32BE37961D3E22E20012F291 /* rrule.swift in Sources */,
 				32208D371D13A35900651030 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
