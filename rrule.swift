@@ -570,4 +570,10 @@ class rrule {
         let dateComponent = calendar?.components([.Year, .Month, .Day], fromDate: date)
         return ((dateComponent?.year)!, (dateComponent?.month)!, (dateComponent?.day)!)
     }
+    
+    private func getWeekday(date: NSDate) -> Int {
+        let calendar = NSCalendar(calendarIdentifier: NSCalendarIdentifierGregorian)
+        let dateComponent = calendar?.components(.Weekday, fromDate: date)
+        return (dateComponent?.weekday)!
+    }
 }
