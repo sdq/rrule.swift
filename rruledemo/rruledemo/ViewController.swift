@@ -218,10 +218,6 @@ extension ViewController: NSTableViewDataSource, NSTableViewDelegate {
         return occurenceArray.count
     }
     
-//    func tableView(tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
-//        return 70
-//    }
-    
     func tableView(tableView: NSTableView, viewForTableColumn tableColumn: NSTableColumn?, row: Int) -> NSView? {
         
         let cellView: NSTableCellView = tableView.makeViewWithIdentifier(tableColumn!.identifier, owner: self) as! NSTableCellView

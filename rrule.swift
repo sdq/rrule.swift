@@ -62,6 +62,8 @@ class rrule {
     var byhour = [Int]()
     var byminute = [Int]()
     var bysecond = [Int]()
+    var exclusionDates = [NSDate]()
+    var inclusionDates = [NSDate]()
 
     private var year: Int = 0
     private var month: Int = 0
@@ -73,7 +75,7 @@ class rrule {
     private var total: Int?
     private var masks = DateMask()
 
-    init(frequency: RruleFrequency, dtstart: NSDate? = nil, until: NSDate? = nil, count: Int? = nil, interval: Int = 1, wkst: Int = 1, bysetpos: [Int] = [], bymonth: [Int] = [], bymonthday: [Int] = [], byyearday: [Int] = [], byweekno: [Int] = [], byweekday: [Int] = [], byhour: [Int] = [], byminute: [Int] = [], bysecond: [Int] = []) {
+    init(frequency: RruleFrequency, dtstart: NSDate? = nil, until: NSDate? = nil, count: Int? = nil, interval: Int = 1, wkst: Int = 1, bysetpos: [Int] = [], bymonth: [Int] = [], bymonthday: [Int] = [], byyearday: [Int] = [], byweekno: [Int] = [], byweekday: [Int] = [], byhour: [Int] = [], byminute: [Int] = [], bysecond: [Int] = [], exclusionDates: [NSDate] = [], inclusionDates: [NSDate] = []) {
         self.frequency = frequency
         if let dtstart = dtstart {
             self.dtstart = dtstart
@@ -95,6 +97,8 @@ class rrule {
         self.byhour = byhour
         self.byminute = byminute
         self.bysecond = bysecond
+        self.inclusionDates = inclusionDates
+        self.exclusionDates = exclusionDates
 
         for monthday in bymonthday {
             if monthday < -31 || monthday > 31 {
@@ -308,6 +312,32 @@ class rrule {
                 (year, month, day) = getYearMonthDay(newDate)
             }
         }
+        
+        //include dates
+        for rdate in inclusionDates {
+            if let beginDate = beginDate {
+                if beginDate.timeIntervalSinceDate(rdate) > 0 {
+                    continue
+                }
+            }
+            if let endDate = endDate {
+                if endDate.timeIntervalSinceDate(rdate) < 0 {
+                    continue
+                }
+            }
+            occurrences.append(rdate)
+        }
+        
+        //exclude dates
+        for exdate in exclusionDates {
+            for occurrence in occurrences {
+                if occurrence.timeIntervalSinceDate(exdate) == 0 {
+                    let index = occurrences.indexOf(occurrence)!
+                    occurrences.removeAtIndex(index)
+                }
+            }
+        }
+        
         return occurrences
     }
 
