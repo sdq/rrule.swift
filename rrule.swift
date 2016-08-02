@@ -65,6 +65,8 @@ class rrule {
     var exclusionDates = [NSDate]()
     var inclusionDates = [NSDate]()
 
+    private let calendar = NSCalendar(calendarIdentifier: NSCalendarIdentifierGregorian)
+    private let dateComponent = NSDateComponents()
     private var year: Int = 0
     private var month: Int = 0
     private var day: Int = 0
@@ -150,6 +152,21 @@ class rrule {
         hour = dtstart.hour
         minute = dtstart.minute
         second = dtstart.second
+        var beginDateYear = 0
+        var beginDateYearday = 0
+        if let beginDate = beginDate {
+            let (beginYear, beginMonth, beginDay) = getYearMonthDay(beginDate)
+            beginDateYear = beginYear
+            beginDateYearday = getYearday(year: beginYear, month: beginMonth, day: beginDay)
+        }
+        var endDateYear = 0
+        var endDateYearday = 0
+        if let endDate = endDate {
+            let (endYear, endMonth, endDay) = getYearMonthDay(endDate)
+            endDateYear = endYear
+            endDateYearday = getYearday(year: endYear, month: endMonth, day: endDay)
+        }
+        var endFlag = false
 
         guard let max = MaxRepeatCycle[frequency] else {
             return []
@@ -244,7 +261,6 @@ class rrule {
             }
 
             // 3. filter the dayset by conditions
-            var finalOccurrence = NSDate()
             for index in 0..<filterDayset.count {
                 //yearday to month and day
 
@@ -253,29 +269,30 @@ class rrule {
                     continue
                 }
 
+                if let _ = beginDate {
+                    if beginDateYear > year || (beginDateYear == year && beginDateYearday > yearday) {
+                        continue
+                    }
+//                    if beginDate.timeIntervalSinceDate(occurrence) > 0 {
+//                        continue
+//                    }
+                }
+                if let _ = endDate {
+                    if endDateYear < year || (endDateYear == year && endDateYearday < yearday) {
+                        continue
+                    }
+//                    if endDate.timeIntervalSinceDate(occurrence) < 0 {
+//                        continue
+//                    }
+                }
                 let occurrence = getDate(year: year, month: 1, day: yearday, hour: hour, minute: minute, second: second)
-
-                if self.dtstart.timeIntervalSinceDate(occurrence) > 0 {
-                    continue
-                }
-
-                if (self.count != nil && occurrences.count >= self.count) || (self.until != nil && occurrence > self.until) {
-                    finalOccurrence = occurrence
+                if (self.count != nil && occurrences.count > self.count) || (self.until != nil && occurrence > self.until) {
+                    endFlag = true
                     break
-                }
-                if let beginDate = beginDate {
-                    if beginDate.timeIntervalSinceDate(occurrence) > 0 {
-                        continue
-                    }
-                }
-                if let endDate = endDate {
-                    if endDate.timeIntervalSinceDate(occurrence) < 0 {
-                        continue
-                    }
                 }
                 occurrences.append(occurrence)
             }
-            if (self.count != nil && occurrences.count >= self.count) || (self.until != nil && finalOccurrence > self.until) {
+            if endFlag {
                 break
             }
 
@@ -308,8 +325,20 @@ class rrule {
             }
 
             if daysIncrement > 0 {
-                let newDate = getDate(year: year, month: month, day: (day + daysIncrement), hour: hour, minute: minute, second: second)
-                (year, month, day) = getYearMonthDay(newDate)
+                let yearday = getYearday(year: year, month: month, day: day)
+                let newYearday = yearday + daysIncrement
+                if newYearday > masks.yearLength {
+                    let newDate = getDate(year: year, month: month, day: (day + daysIncrement), hour: hour, minute: minute, second: second)
+                    (year, month, day) = getYearMonthDay(newDate)
+                } else {
+                    if masks.leapYear {
+                        month = M366MASK[newYearday - 1]
+                        day = newYearday - M366RANGE[month - 1]
+                    } else {
+                        month = M365MASK[newYearday - 1]
+                        day = newYearday - M365RANGE[month - 1]
+                    }
+                }
             }
         }
         
@@ -342,7 +371,7 @@ class rrule {
     }
 
     private func getDaySet(year: Int, month: Int, day: Int, masks: DateMask) -> [Int] {
-        let date = getDate(year: year, month: month, day: day, hour: hour, minute: minute, second: second)
+        //let date = getDate(year: year, month: month, day: day, hour: hour, minute: minute, second: second)
         switch frequency {
         case .Yearly:
             let yearLen = masks.yearLength
@@ -361,7 +390,7 @@ class rrule {
             return returnArray
         case .Weekly:
             var returnArray = [Int]()
-            var i = NSCalendar.currentCalendar().ordinalityOfUnit(.Day, inUnit: .Year, forDate: date) - 1 //from zero
+            var i = getYearday(year: year, month: month, day: day) - 1 //from zero
             for _ in 0..<7 {
                 returnArray.append(i)
                 i = i + 1
@@ -377,7 +406,7 @@ class rrule {
         case .Minutely:
             fallthrough
         case .Secondly:
-            let i = NSCalendar.currentCalendar().ordinalityOfUnit(.Day, inUnit: .Year, forDate: date) - 1
+            let i = getYearday(year: year, month: month, day: day) - 1
             return [i]
         }
     }
@@ -584,8 +613,6 @@ class rrule {
     }
 
     private func getDate(year year: Int, month: Int, day: Int, hour: Int, minute: Int, second: Int) -> NSDate {
-        let calendar = NSCalendar(calendarIdentifier: NSCalendarIdentifierGregorian)
-        let dateComponent = NSDateComponents()
         dateComponent.year = year
         dateComponent.month = month
         dateComponent.day = day
@@ -594,9 +621,16 @@ class rrule {
         dateComponent.second = second
         return (calendar?.dateFromComponents(dateComponent))!
     }
+    
+    private func getYearday(year year:Int, month: Int, day: Int) -> Int {
+        if isLeapYear(year) {
+            return M366RANGE[month - 1] + day
+        } else {
+            return M365RANGE[month - 1] + day
+        }
+    }
 
     private func getYearMonthDay(date: NSDate) -> (Int, Int, Int) {
-        let calendar = NSCalendar(calendarIdentifier: NSCalendarIdentifierGregorian)
         let dateComponent = calendar?.components([.Year, .Month, .Day], fromDate: date)
         return ((dateComponent?.year)!, (dateComponent?.month)!, (dateComponent?.day)!)
     }
