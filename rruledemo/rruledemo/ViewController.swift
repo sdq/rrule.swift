@@ -41,45 +41,39 @@ class ViewController: NSViewController {
     @IBOutlet weak var bysetpos: NSTextField!
 
     @IBOutlet weak var tableview: NSTableView!
-    var occurenceArray: [NSDate] = []
+    var occurenceArray: [Date] = []
     
     let frequencyArray = ["Yearly", "Monthly", "Weekly", "Daily"]
     let weekdayArray = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        tableview.setDataSource(self)
-        tableview.setDelegate(self)
+        tableview.dataSource = self
+        tableview.delegate = self
         frequency.removeAllItems()
-        frequency.addItemsWithTitles(frequencyArray)
+        frequency.addItems(withTitles: frequencyArray)
         wkst.removeAllItems()
-        wkst.addItemsWithTitles(weekdayArray)
-        frequency.indexOfSelectedItem
-    }
-
-    override var representedObject: AnyObject? {
-        didSet {
-        // Update the view, if already loaded.
-        }
+        wkst.addItems(withTitles: weekdayArray)
+//        frequency.indexOfSelectedItem
     }
 }
 
 extension ViewController {
 
-    @IBAction func convert(sender: NSButton) {
+    @IBAction func convert(_ sender: NSButton) {
         //frequency
-        var rrulefrequency: RruleFrequency = .Yearly
+        var rrulefrequency: RruleFrequency = .yearly
         switch frequency.indexOfSelectedItem {
         case 0:
-            rrulefrequency = .Yearly
+            rrulefrequency = .yearly
         case 1:
-            rrulefrequency = .Monthly
+            rrulefrequency = .monthly
         case 2:
-            rrulefrequency = .Weekly
+            rrulefrequency = .weekly
         case 3:
-            rrulefrequency = .Daily
+            rrulefrequency = .daily
         default:
-            rrulefrequency = .Yearly
+            rrulefrequency = .yearly
         }
         
         //dtstart
@@ -130,7 +124,7 @@ extension ViewController {
         //byweekno
         var rrulebyweekno: [Int] = []
         let byweeknostring = byweekno.stringValue
-        let stringArray = byweeknostring.componentsSeparatedByString(",")
+        let stringArray = byweeknostring.components(separatedBy: ",")
         for x in stringArray {
             if let y = Int(x) {
                 rrulebyweekno.append(y)
@@ -179,7 +173,7 @@ extension ViewController {
         //bymonthday
         var rrulebymonthday: [Int] = []
         let bymonthdaystring = bymonthday.stringValue
-        let monthdayArray = bymonthdaystring.componentsSeparatedByString(",")
+        let monthdayArray = bymonthdaystring.components(separatedBy: ",")
         for x in monthdayArray {
             if let y = Int(x) {
                 rrulebymonthday.append(y)
@@ -189,7 +183,7 @@ extension ViewController {
         //byyearday
         var rrulebyyearday: [Int] = []
         let byyeardaystring = byyearday.stringValue
-        let byyeardayArray = byyeardaystring.componentsSeparatedByString(",")
+        let byyeardayArray = byyeardaystring.components(separatedBy: ",")
         for x in byyeardayArray {
             if let y = Int(x) {
                 rrulebyyearday.append(y)
@@ -199,7 +193,7 @@ extension ViewController {
         //bysetpos
         var rrulebysetpos: [Int] = []
         let bysetposstring = bysetpos.stringValue
-        let bysetposArray = bysetposstring.componentsSeparatedByString(",")
+        let bysetposArray = bysetposstring.components(separatedBy: ",")
         for x in bysetposArray {
             if let y = Int(x) {
                 rrulebysetpos.append(y)
@@ -214,18 +208,18 @@ extension ViewController {
 }
 
 extension ViewController: NSTableViewDataSource, NSTableViewDelegate {
-    func numberOfRowsInTableView(tableView: NSTableView) -> Int {
+    func numberOfRows(in tableView: NSTableView) -> Int {
         return occurenceArray.count
     }
     
-    func tableView(tableView: NSTableView, viewForTableColumn tableColumn: NSTableColumn?, row: Int) -> NSView? {
+    func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         
-        let cellView: NSTableCellView = tableView.makeViewWithIdentifier(tableColumn!.identifier, owner: self) as! NSTableCellView
+        let cellView: NSTableCellView = tableView.make(withIdentifier: tableColumn!.identifier, owner: self) as! NSTableCellView
         let item = occurenceArray[row]
-        let formatter = NSDateFormatter()
+        let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH:mm:ss ZZZ"
-        formatter.timeZone = NSTimeZone()
-        let date = formatter.stringFromDate(item)
+        formatter.timeZone = TimeZone.current
+        let date = formatter.string(from: item)
         cellView.textField!.stringValue = date
         return cellView
     }

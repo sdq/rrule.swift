@@ -7,20 +7,19 @@
 //
 
 import Cocoa
-import SwiftDate
 
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate {
 
-    func applicationDidFinishLaunching(aNotification: NSNotification) {
+    func applicationDidFinishLaunching(_ aNotification: Notification) {
         //test()
     }
     
     func test() {
-        let rule = rrule(frequency: .Daily, dtstart: NSDate(year: 2016, month: 8, day:1), interval: 2, inclusionDates: [NSDate(year: 2016, month: 8, day:2)], exclusionDates: [NSDate(year: 2016, month: 8, day:3)])
+//        let rule = rrule(frequency: .daily, dtstart: Date(year: 2016, month: 8, day:1), interval: 2, exclusionDates: [Date(year: 2016, month: 8, day:3)], inclusionDates: [Date(year: 2016, month: 8, day:2)])
         
-        let occurenceArray = rule.getOccurrences()
-        print(occurenceArray)
+//        let occurenceArray = rule.getOccurrences()
+//        print(occurenceArray)
     }
 }
 

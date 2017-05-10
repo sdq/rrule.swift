@@ -8,7 +8,30 @@
 
 import Foundation
 import EventKit
-import SwiftDate
+// FIXME: comparison operators with optionals were removed from the Swift Standard Libary.
+// Consider refactoring the code to use the non-optional operators.
+fileprivate func < <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
+  switch (lhs, rhs) {
+  case let (l?, r?):
+    return l < r
+  case (nil, _?):
+    return true
+  default:
+    return false
+  }
+}
+
+// FIXME: comparison operators with optionals were removed from the Swift Standard Libary.
+// Consider refactoring the code to use the non-optional operators.
+fileprivate func > <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
+  switch (lhs, rhs) {
+  case let (l?, r?):
+    return l > r
+  default:
+    return rhs < lhs
+  }
+}
+
 
 // swiftlint:disable file_length
 // swiftlint:disable variable_name
@@ -18,13 +41,13 @@ import SwiftDate
 // swiftlint:disable todo
 
 public enum RruleFrequency {
-    case Yearly
-    case Monthly
-    case Weekly
-    case Daily
-    case Hourly //Todo
-    case Minutely //Todo
-    case Secondly //Todo
+    case yearly
+    case monthly
+    case weekly
+    case daily
+    case hourly //Todo
+    case minutely //Todo
+    case secondly //Todo
 }
 
 private struct DateMask {
@@ -48,8 +71,8 @@ class rrule {
     var frequency: RruleFrequency
     var interval = 1
     var wkst: Int = 1
-    var dtstart = NSDate()
-    var until: NSDate?
+    var dtstart = Date()
+    var until: Date?
     var count: Int?
     var bysetpos = [Int]()
     var byyearday = [Int]()
@@ -62,22 +85,22 @@ class rrule {
     var byhour = [Int]()
     var byminute = [Int]()
     var bysecond = [Int]()
-    var exclusionDates = [NSDate]()
-    var inclusionDates = [NSDate]()
+    var exclusionDates = [Date]()
+    var inclusionDates = [Date]()
 
-    private let calendar = NSCalendar(calendarIdentifier: NSCalendarIdentifierGregorian)
-    private let dateComponent = NSDateComponents()
-    private var year: Int = 0
-    private var month: Int = 0
-    private var day: Int = 0
-    private var hour: Int = 0
-    private var minute: Int = 0
-    private var second: Int = 0
-    private var dayset: [Int]?
-    private var total: Int?
-    private var masks = DateMask()
+    fileprivate let calendar = Calendar(identifier: Calendar.Identifier.gregorian)
+    fileprivate var dateComponent = DateComponents()
+    fileprivate var year: Int = 0
+    fileprivate var month: Int = 0
+    fileprivate var day: Int = 0
+    fileprivate var hour: Int = 0
+    fileprivate var minute: Int = 0
+    fileprivate var second: Int = 0
+    fileprivate var dayset: [Int]?
+    fileprivate var total: Int?
+    fileprivate var masks = DateMask()
 
-    init(frequency: RruleFrequency, dtstart: NSDate? = nil, until: NSDate? = nil, count: Int? = nil, interval: Int = 1, wkst: Int = 1, bysetpos: [Int] = [], bymonth: [Int] = [], bymonthday: [Int] = [], byyearday: [Int] = [], byweekno: [Int] = [], byweekday: [Int] = [], byhour: [Int] = [], byminute: [Int] = [], bysecond: [Int] = [], exclusionDates: [NSDate] = [], inclusionDates: [NSDate] = []) {
+    init(frequency: RruleFrequency, dtstart: Date? = nil, until: Date? = nil, count: Int? = nil, interval: Int = 1, wkst: Int = 1, bysetpos: [Int] = [], bymonth: [Int] = [], bymonthday: [Int] = [], byyearday: [Int] = [], byweekno: [Int] = [], byweekday: [Int] = [], byhour: [Int] = [], byminute: [Int] = [], bysecond: [Int] = [], exclusionDates: [Date] = [], inclusionDates: [Date] = []) {
         self.frequency = frequency
         if let dtstart = dtstart {
             self.dtstart = dtstart
@@ -115,22 +138,24 @@ class rrule {
 
         // Complete the recurrence rule
         if self.byweekno.count == 0 && self.byyearday.count == 0 && self.bymonthday.count == 0 && self.byweekday.count == 0 {
+            let calendar = Calendar.current
+            let components = calendar.dateComponents([.year, .month, .day], from: dtstart!)
             switch frequency {
-            case .Yearly:
+            case .yearly:
                 if bymonth.count == 0 {
-                    if let month = dtstart?.month {
+                    if let month = components.month {
                         self.bymonth = [month]
                     }
                 }
-                if let day = dtstart?.day {
+                if let day = components.day {
                     self.bymonthday = [day]
                 }
-            case .Monthly:
-                if let day = dtstart?.day {
+            case .monthly:
+                if let day = components.day {
                     self.bymonthday = [day]
                 }
-            case .Weekly:
-                if let weekday = dtstart?.weekday {
+            case .weekly:
+                if let weekday = components.weekday {
                     self.byweekday = [weekday]
                 }
             default:
@@ -139,19 +164,20 @@ class rrule {
         }
     }
 
-    func getOccurrences() -> [NSDate] {
+    func getOccurrences() -> [Date] {
         return getOccurrencesBetween()
     }
 
     // swiftlint:disable function_body_length
-    func getOccurrencesBetween(beginDate beginDate: NSDate? = nil, endDate: NSDate? = nil) -> [NSDate] {
-
-        year = dtstart.year
-        month = dtstart.month
-        day = dtstart.day
-        hour = dtstart.hour
-        minute = dtstart.minute
-        second = dtstart.second
+    func getOccurrencesBetween(beginDate: Date? = nil, endDate: Date? = nil) -> [Date] {
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: dtstart)
+        year = components.year!
+        month = components.month!
+        day = components.day!
+        hour = components.hour!
+        minute = components.minute!
+        second = components.second!
         var beginDateYear = 0
         var beginDateYearday = 0
         if let beginDate = beginDate {
@@ -172,7 +198,7 @@ class rrule {
             return []
         }
 
-        var occurrences = [NSDate]()
+        var occurrences = [Date]()
 
         for _ in 0..<max {
 
@@ -200,8 +226,13 @@ class rrule {
                     } else {
                         masks.nextYearLength = 365
                     }
-                    let weekdayOf1stYearday = NSDate(year: year, month: 1, day: 1).weekday
-                    let yeardayToWeekday = Array(WDAYMASK.suffixFrom(weekdayOf1stYearday-1))
+                    var dateComponents = DateComponents()
+                    dateComponents.year = year
+                    dateComponents.month = 1
+                    dateComponents.day = 1
+                    let date = Calendar.current.date(from: dateComponents)!
+                    let weekdayOf1stYearday = Calendar.current.component(.weekday, from: date)
+                    let yeardayToWeekday = Array(WDAYMASK.suffix(from: weekdayOf1stYearday-1))
                     masks.weekdayOf1stYearday = weekdayOf1stYearday
                     masks.yeardayToWeekday = yeardayToWeekday
                     if byweekno.count > 0 {
@@ -286,7 +317,7 @@ class rrule {
 //                    }
                 }
                 let occurrence = getDate(year: year, month: 1, day: yearday, hour: hour, minute: minute, second: second)
-                if (self.count != nil && occurrences.count > self.count) || (self.until != nil && occurrence > self.until) {
+                if (self.count != nil && occurrences.count >= self.count!) || (self.until != nil && occurrence > self.until!) {
                     endFlag = true
                     break
                 }
@@ -300,9 +331,9 @@ class rrule {
 
             var daysIncrement = 0
             switch frequency {
-            case .Yearly:
+            case .yearly:
                 year = year + interval
-            case .Monthly:
+            case .monthly:
                 month = month + interval
                 if month > 12 {
                     year = year + month / 12
@@ -312,13 +343,13 @@ class rrule {
                         year = year - 1
                     }
                 }
-            case .Weekly:
+            case .weekly:
                 if dayset.count < 7 {
                     daysIncrement = 7 * (interval - 1) + dayset.count
                 } else {
                     daysIncrement = 7 * interval
                 }
-            case .Daily:
+            case .daily:
                 daysIncrement = interval
             default:
                 break
@@ -345,12 +376,12 @@ class rrule {
         //include dates
         for rdate in inclusionDates {
             if let beginDate = beginDate {
-                if beginDate.timeIntervalSinceDate(rdate) > 0 {
+                if beginDate.timeIntervalSince(rdate) > 0 {
                     continue
                 }
             }
             if let endDate = endDate {
-                if endDate.timeIntervalSinceDate(rdate) < 0 {
+                if endDate.timeIntervalSince(rdate) < 0 {
                     continue
                 }
             }
@@ -360,9 +391,9 @@ class rrule {
         //exclude dates
         for exdate in exclusionDates {
             for occurrence in occurrences {
-                if occurrence.timeIntervalSinceDate(exdate) == 0 {
-                    let index = occurrences.indexOf(occurrence)!
-                    occurrences.removeAtIndex(index)
+                if occurrence.timeIntervalSince(exdate) == 0 {
+                    let index = occurrences.index(of: occurrence)!
+                    occurrences.remove(at: index)
                 }
             }
         }
@@ -370,17 +401,17 @@ class rrule {
         return occurrences
     }
 
-    private func getDaySet(year: Int, month: Int, day: Int, masks: DateMask) -> [Int] {
+    fileprivate func getDaySet(_ year: Int, month: Int, day: Int, masks: DateMask) -> [Int] {
         //let date = getDate(year: year, month: month, day: day, hour: hour, minute: minute, second: second)
         switch frequency {
-        case .Yearly:
+        case .yearly:
             let yearLen = masks.yearLength
             var returnArray = [Int]()
             for i in 0..<yearLen {
                 returnArray.append(i)
             }
             return returnArray
-        case .Monthly:
+        case .monthly:
             let start = masks.lastdayOfMonth[month - 1]
             let end = masks.lastdayOfMonth[month]
             var returnArray = [Int]()
@@ -388,7 +419,7 @@ class rrule {
                 returnArray.append(i)
             }
             return returnArray
-        case .Weekly:
+        case .weekly:
             var returnArray = [Int]()
             var i = getYearday(year: year, month: month, day: day) - 1 //from zero
             for _ in 0..<7 {
@@ -399,19 +430,19 @@ class rrule {
                 }
             }
             return returnArray
-        case .Daily:
+        case .daily:
             fallthrough
-        case .Hourly:
+        case .hourly:
             fallthrough
-        case .Minutely:
+        case .minutely:
             fallthrough
-        case .Secondly:
+        case .secondly:
             let i = getYearday(year: year, month: month, day: day) - 1
             return [i]
         }
     }
 
-    private func buildWeeknoMask(year: Int, month: Int, day: Int) {
+    fileprivate func buildWeeknoMask(_ year: Int, month: Int, day: Int) {
         masks.yeardayIsInWeekno = [Int:Bool]()
 
         let firstWkst = (7 - masks.weekdayOf1stYearday + wkst) % 7
@@ -474,7 +505,12 @@ class rrule {
 
         var weeksLastYear = -1
         if !byweekno.contains(-1) {
-            let weekdayOf1stYearday = NSDate(year: year-1, month: 1, day: 1).weekday
+            var dateComponents = DateComponents()
+            dateComponents.year = year-1
+            dateComponents.month = 1
+            dateComponents.day = 1
+            let date = Calendar.current.date(from: dateComponents)!
+            let weekdayOf1stYearday = Calendar.current.component(.weekday, from: date)
             var firstWkstOffsetLastYear = (7 - weekdayOf1stYearday + wkst) % 7
             let lastYearLen = isLeapYear(year-1) ? 366 : 365
             if firstWkstOffsetLastYear >= 4 {
@@ -491,7 +527,7 @@ class rrule {
         }
     }
 
-    private let M366MASK = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+    fileprivate let M366MASK = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
                             2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
                             3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,
                             4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,
@@ -505,7 +541,7 @@ class rrule {
                             12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,
                             1,1,1,1,1,1,1] //7 days longer
 
-    private let M365MASK = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+    fileprivate let M365MASK = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
                             2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
                             3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,
                             4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,
@@ -519,7 +555,7 @@ class rrule {
                             12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,
                             1,1,1,1,1,1,1]
 
-    private let MDAY366MASK = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,
+    fileprivate let MDAY366MASK = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,
                                1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,
                                1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,
                                1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,
@@ -533,7 +569,7 @@ class rrule {
                                1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,
                                1,2,3,4,5,6,7]
 
-    private let MDAY365MASK = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,
+    fileprivate let MDAY365MASK = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,
                                1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,
                                1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,
                                1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,
@@ -547,7 +583,7 @@ class rrule {
                                1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,
                                1,2,3,4,5,6,7]
 
-    private let NMDAY366MASK = [-31,-30,-29,-28,-27,-26,-25,-24,-23,-22,-21,-20,-19,-18,-17,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,
+    fileprivate let NMDAY366MASK = [-31,-30,-29,-28,-27,-26,-25,-24,-23,-22,-21,-20,-19,-18,-17,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,
                                 -29,-28,-27,-26,-25,-24,-23,-22,-21,-20,-19,-18,-17,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,
                                 -31,-30,-29,-28,-27,-26,-25,-24,-23,-22,-21,-20,-19,-18,-17,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,
                                 -30,-29,-28,-27,-26,-25,-24,-23,-22,-21,-20,-19,-18,-17,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,
@@ -561,7 +597,7 @@ class rrule {
                                 -31,-30,-29,-28,-27,-26,-25,-24,-23,-22,-21,-20,-19,-18,-17,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,
                                 -31,-30,-29,-28,-27,-26,-25]
 
-    private let NMDAY365MASK = [-31,-30,-29,-28,-27,-26,-25,-24,-23,-22,-21,-20,-19,-18,-17,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,
+    fileprivate let NMDAY365MASK = [-31,-30,-29,-28,-27,-26,-25,-24,-23,-22,-21,-20,-19,-18,-17,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,
                                 -28,-27,-26,-25,-24,-23,-22,-21,-20,-19,-18,-17,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,
                                 -31,-30,-29,-28,-27,-26,-25,-24,-23,-22,-21,-20,-19,-18,-17,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,
                                 -30,-29,-28,-27,-26,-25,-24,-23,-22,-21,-20,-19,-18,-17,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,
@@ -575,7 +611,7 @@ class rrule {
                                 -31,-30,-29,-28,-27,-26,-25,-24,-23,-22,-21,-20,-19,-18,-17,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,
                                 -31,-30,-29,-28,-27,-26,-25]
 
-    private let WDAYMASK = [1,2,3,4,5,6,7,1,2,3,4,5,6,7,1,2,3,4,5,6,7,1,2,3,4,5,6,7,1,2,3,4,5,6,7,
+    fileprivate let WDAYMASK = [1,2,3,4,5,6,7,1,2,3,4,5,6,7,1,2,3,4,5,6,7,1,2,3,4,5,6,7,1,2,3,4,5,6,7,
                             1,2,3,4,5,6,7,1,2,3,4,5,6,7,1,2,3,4,5,6,7,1,2,3,4,5,6,7,1,2,3,4,5,6,7,
                             1,2,3,4,5,6,7,1,2,3,4,5,6,7,1,2,3,4,5,6,7,1,2,3,4,5,6,7,1,2,3,4,5,6,7,
                             1,2,3,4,5,6,7,1,2,3,4,5,6,7,1,2,3,4,5,6,7,1,2,3,4,5,6,7,1,2,3,4,5,6,7,
@@ -587,19 +623,19 @@ class rrule {
                             1,2,3,4,5,6,7,1,2,3,4,5,6,7,1,2,3,4,5,6,7,1,2,3,4,5,6,7,1,2,3,4,5,6,7,
                             1,2,3,4,5,6,7,1,2,3,4,5,6,7,1,2,3,4,5,6,7,1,2,3,4,5,6,7,1,2,3,4,5,6,7] //55 weeks
 
-    private let M366RANGE = [0,31,60,91,121,152,182,213,244,274,305,335,366]
+    fileprivate let M366RANGE = [0,31,60,91,121,152,182,213,244,274,305,335,366]
 
-    private let M365RANGE = [0,31,59,90,120,151,181,212,243,273,304,334,365]
+    fileprivate let M365RANGE = [0,31,59,90,120,151,181,212,243,273,304,334,365]
 
-    private let MaxRepeatCycle: [RruleFrequency:Int] = [.Yearly:10,
-                                                       .Monthly:120,
-                                                       .Weekly:520,
-                                                       .Daily:3650,
-                                                       .Hourly:24,
-                                                       .Minutely:1440,
-                                                       .Secondly:86400]
+    fileprivate let MaxRepeatCycle: [RruleFrequency:Int] = [.yearly:10,
+                                                       .monthly:120,
+                                                       .weekly:520,
+                                                       .daily:3650,
+                                                       .hourly:24,
+                                                       .minutely:1440,
+                                                       .secondly:86400]
 
-    private func isLeapYear(year: Int) -> Bool {
+    fileprivate func isLeapYear(_ year: Int) -> Bool {
         if year % 4 == 0 {
             return true
         }
@@ -612,17 +648,17 @@ class rrule {
         return false
     }
 
-    private func getDate(year year: Int, month: Int, day: Int, hour: Int, minute: Int, second: Int) -> NSDate {
+    fileprivate func getDate(year: Int, month: Int, day: Int, hour: Int, minute: Int, second: Int) -> Date {
         dateComponent.year = year
         dateComponent.month = month
         dateComponent.day = day
         dateComponent.hour = hour
         dateComponent.minute = minute
         dateComponent.second = second
-        return (calendar?.dateFromComponents(dateComponent))!
+        return (calendar.date(from: dateComponent))!
     }
     
-    private func getYearday(year year:Int, month: Int, day: Int) -> Int {
+    fileprivate func getYearday(year:Int, month: Int, day: Int) -> Int {
         if isLeapYear(year) {
             return M366RANGE[month - 1] + day
         } else {
@@ -630,14 +666,14 @@ class rrule {
         }
     }
 
-    private func getYearMonthDay(date: NSDate) -> (Int, Int, Int) {
-        let dateComponent = calendar?.components([.Year, .Month, .Day], fromDate: date)
+    fileprivate func getYearMonthDay(_ date: Date) -> (Int, Int, Int) {
+        let dateComponent = (calendar as NSCalendar?)?.components([.year, .month, .day], from: date)
         return ((dateComponent?.year)!, (dateComponent?.month)!, (dateComponent?.day)!)
     }
     
-    private func getWeekday(date: NSDate) -> Int {
-        let calendar = NSCalendar(calendarIdentifier: NSCalendarIdentifierGregorian)
-        let dateComponent = calendar?.components(.Weekday, fromDate: date)
+    fileprivate func getWeekday(_ date: Date) -> Int {
+        let calendar = Calendar(identifier: Calendar.Identifier.gregorian)
+        let dateComponent = (calendar as NSCalendar?)?.components(.weekday, from: date)
         return (dateComponent?.weekday)!
     }
 }
