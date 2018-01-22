@@ -99,25 +99,25 @@ extension ViewController {
         
         //byweekday
         var rrulebyweekday: [Int] = []
-        if sunday.state == 1 {
+        if sunday.state.rawValue == 1 {
             rrulebyweekday.append(1)
         }
-        if monday.state == 1 {
+        if monday.state.rawValue == 1 {
             rrulebyweekday.append(2)
         }
-        if tuesday.state == 1 {
+        if tuesday.state.rawValue == 1 {
             rrulebyweekday.append(3)
         }
-        if wednesday.state == 1 {
+        if wednesday.state.rawValue == 1 {
             rrulebyweekday.append(4)
         }
-        if thursday.state == 1 {
+        if thursday.state.rawValue == 1 {
             rrulebyweekday.append(5)
         }
-        if friday.state == 1 {
+        if friday.state.rawValue == 1 {
             rrulebyweekday.append(6)
         }
-        if saturday.state == 1 {
+        if saturday.state.rawValue == 1 {
             rrulebyweekday.append(7)
         }
         
@@ -133,40 +133,40 @@ extension ViewController {
         
         //bymonth
         var rrulebymonth: [Int] = []
-        if Jan.state == 1 {
+        if Jan.state.rawValue == 1 {
             rrulebymonth.append(1)
         }
-        if Feb.state == 1 {
+        if Feb.state.rawValue == 1 {
             rrulebymonth.append(2)
         }
-        if Mar.state == 1 {
+        if Mar.state.rawValue == 1 {
             rrulebymonth.append(3)
         }
-        if Apr.state == 1 {
+        if Apr.state.rawValue == 1 {
             rrulebymonth.append(4)
         }
-        if May.state == 1 {
+        if May.state.rawValue == 1 {
             rrulebymonth.append(5)
         }
-        if Jun.state == 1 {
+        if Jun.state.rawValue == 1 {
             rrulebymonth.append(6)
         }
-        if Jul.state == 1 {
+        if Jul.state.rawValue == 1 {
             rrulebymonth.append(7)
         }
-        if Aug.state == 1 {
+        if Aug.state.rawValue == 1 {
             rrulebymonth.append(8)
         }
-        if Sep.state == 1 {
+        if Sep.state.rawValue == 1 {
             rrulebymonth.append(9)
         }
-        if Oct.state == 1 {
+        if Oct.state.rawValue == 1 {
             rrulebymonth.append(10)
         }
-        if Nov.state == 1 {
+        if Nov.state.rawValue == 1 {
             rrulebymonth.append(11)
         }
-        if Dec.state == 1 {
+        if Dec.state.rawValue == 1 {
             rrulebymonth.append(12)
         }
         
@@ -214,7 +214,7 @@ extension ViewController: NSTableViewDataSource, NSTableViewDelegate {
     
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         
-        let cellView: NSTableCellView = tableView.make(withIdentifier: tableColumn!.identifier, owner: self) as! NSTableCellView
+        let cellView: NSTableCellView = tableView.makeView(withIdentifier: tableColumn!.identifier, owner: self) as! NSTableCellView
         let item = occurenceArray[row]
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH:mm:ss ZZZ"
