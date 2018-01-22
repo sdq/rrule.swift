@@ -1,5 +1,5 @@
 # rrule.swift
-recurrence rules in **swift3**  (No other dependencies)
+recurrence rules in **swift4**  (No other dependencies)
 
 Demo
 Download the App [here](https://github.com/sdq/rrule.swift/blob/master/app/rruledemo.app).
