@@ -1,5 +1,6 @@
 # rrule.swift
-recurrence rules in **swift4**  (No other dependencies)
+rrule.swift supports recurrence rules in **swift4**  (No other dependencies).
+It is a partial port of the rrule module from the excellent [python-dateutil](http://labix.org/python-dateutil/) library.
 
 Demo
 Download the App [here](https://github.com/sdq/rrule.swift/blob/master/app/rruledemo.app).
