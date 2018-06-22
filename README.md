@@ -10,7 +10,7 @@ How to use
 ------
 
 	let rule = rule(frequency, dtstart: dtstart, until: until, count: count, interval: interval, wkst: wkst, bysetpos: bysetpos, bymonth: bymonth, bymonthday: bymonthday, byyearday: byyearday, byweekno: byweekno, byweekday: byweekday)
-	let occurrences = rule.getOccurencegetOccurrences 
+	let occurrences = rule.getOccurrences()
 
 To do
 ------
