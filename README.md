@@ -14,6 +14,16 @@ Drag **rrule.swift** into your project.
 	let rule = rule(frequency, dtstart: dtstart, until: until, count: count, interval: interval, wkst: wkst, bysetpos: bysetpos, bymonth: bymonth, bymonthday: bymonthday, byyearday: byyearday, byweekno: byweekno, byweekday: byweekday)
 	let occurrences = rule.getOccurrences()
 
+Convert an EKEvent's array of EKRecurrenceRule to an array of rrule to perform calculations
+
+    let eventStore = EKEventStore()
+    if let event = eventStore.event(withIdentifier: "id") {
+        let rrules = event.rrules
+        for rrule in rrules {
+            print(rrule.getOccurrences())
+        }
+    }
+
 To do
 ------
 * Hourly

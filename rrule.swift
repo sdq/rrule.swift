@@ -677,3 +677,117 @@ class rrule {
         return (dateComponent?.weekday)!
     }
 }
+
+extension EKEvent {
+    
+    private var dtStart: Date {
+        return self.occurrenceDate
+    }
+    
+    private func byweekday(rule: EKRecurrenceRule) -> [Int] {
+        var days = [Int]()
+        
+        if let daysOTW = rule.daysOfTheWeek {
+            if daysOTW.isEmpty {
+                return [Calendar.current.component(.weekday, from: dtStart)]
+            } else {
+                for d in daysOTW {
+                    days.append(d.dayOfTheWeek.rawValue)
+                }
+                return days
+            }
+        }
+        return [Calendar.current.component(.weekday, from: dtStart)]
+    }
+    
+    var rrules: [rrule] {
+        var rs = [rrule]()
+        
+        if let rss = recurrenceRules {
+            for rule in rss {
+                let rr = rrule(frequency: rule.freq,
+                               dtstart: occurrenceDate,
+                               until: rule.until,
+                               count: rule.count,
+                               interval: rule.interval,
+                               wkst: rule.wkst,
+                               bysetpos: rule.bysetpos,
+                               bymonth: rule.bymonth,
+                               bymonthday: rule.bymonthday,
+                               byyearday: rule.byyearday,
+                               byweekno: rule.byweekno,
+                               byweekday: byweekday(rule: rule),
+                               byhour: [], byminute: [], bysecond: [], exclusionDates: [], inclusionDates: [])
+                                
+                rs.append(rr)
+            }
+        }
+        return rs
+    }
+    
+    
+}
+
+private extension EKRecurrenceRule {
+    
+    var freq: RruleFrequency {
+        switch frequency {
+        case .daily:
+            return .daily
+        case .monthly:
+            return .monthly
+        case .weekly:
+            return .weekly
+        default:
+            return .daily
+        }
+    }
+    
+    var until: Date? {
+        return recurrenceEnd?.endDate
+    }
+    
+    var count: Int? {
+        return nil
+    }
+    
+    var wkst: Int {
+        return firstDayOfTheWeek
+    }
+    
+    var bysetpos: [Int] {
+        if let pos = setPositions {
+            return pos as! [Int]
+        }
+        return [Int]()
+    }
+    
+    var bymonth: [Int] {
+        if let month = monthsOfTheYear {
+            return month as! [Int]
+        }
+        return [Int]()
+    }
+    
+    var bymonthday: [Int] {
+        if let month = daysOfTheMonth {
+            return month as! [Int]
+        }
+        return [Int]()
+    }
+    
+    var byyearday: [Int] {
+        if let year = daysOfTheYear {
+            return year as! [Int]
+        }
+        return [Int]()
+    }
+    
+    var byweekno: [Int] {
+        if let week = weeksOfTheYear {
+            return week as! [Int]
+        }
+        return [Int]()
+    }
+    
+}
